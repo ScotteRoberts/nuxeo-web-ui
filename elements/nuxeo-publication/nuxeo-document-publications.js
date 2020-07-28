@@ -69,7 +69,6 @@ Polymer({
       }
 
       .uppercase {
-        text-transform: uppercase;
       }
 
       .resultActions {

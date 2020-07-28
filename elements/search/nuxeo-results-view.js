@@ -74,7 +74,6 @@ Polymer({
       }
 
       .filter {
-        text-transform: uppercase;
       }
 
       .buttons {

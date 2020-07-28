@@ -170,7 +170,6 @@ Polymer({
 
       .header h1,
       .header .input-content.paper-input-container input {
-        text-transform: uppercase;
       }
 
       .row {

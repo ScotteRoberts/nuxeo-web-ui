@@ -47,7 +47,6 @@ Polymer({
       }
 
       paper-tab {
-        text-transform: uppercase;
       }
 
       paper-tabs,
