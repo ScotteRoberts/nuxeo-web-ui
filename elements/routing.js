@@ -66,7 +66,8 @@ customElements.whenDefined('nuxeo-app').then(() => {
     if (!data.state.contentView) {
       app.currentContentView = null;
     }
-    app.load('browse', data.params.id, '', 'view');
+    const searchParams = new URLSearchParams(data.querystring);
+    app.load('browse', data.params.id, '', searchParams.get('p') || 'view');
   });
 
   page('/admin/:tab?', (data) => {
@@ -128,19 +129,37 @@ customElements.whenDefined('nuxeo-app').then(() => {
 
     useHashbang: true,
 
-    browse(path, subPage) {
-      return `/browse${
-        path
-          ? path
-              .split('/')
-              .map((n) => encodeURIComponent(n))
-              .join('/')
-          : ''
-      }${subPage ? `?p=${encodeURIComponent(subPage)}` : ''}`;
+    browse(pathOrDoc, subPage) {
+      let routeKey = 'path';
+      let routeVal = pathOrDoc;
+      if (typeof pathOrDoc === 'object') {
+        routeKey =
+          (Nuxeo && Nuxeo.UI && Nuxeo.UI.config && Nuxeo.UI.config.router && Nuxeo.UI.config.router.docKey) || routeKey;
+        routeVal = pathOrDoc[routeKey];
+      }
+      if (!routeVal) {
+        return;
+      }
+      switch (routeKey) {
+        case 'uid':
+          return app.router.document(routeVal, subPage);
+        case 'path':
+          return `/browse${
+            routeVal
+              ? routeVal
+                  .split('/')
+                  .map((n) => encodeURIComponent(n))
+                  .join('/')
+              : ''
+          }${subPage ? `?p=${encodeURIComponent(subPage)}` : ''}`;
+        default:
+          console.error(`invalid router key: ${routeKey}`);
+          break;
+      }
     },
 
-    document(id) {
-      return `/doc/${id}`;
+    document(idOrDocument, subPage) {
+      return `/doc/${idOrDocument.uid || idOrDocument}${subPage ? `?p=${encodeURIComponent(subPage)}` : ''}`;
     },
 
     home() {
