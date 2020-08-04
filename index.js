@@ -3,6 +3,8 @@ import './elements/nuxeo-app.js';
 
 // expose moment for compat
 import moment from '@nuxeo/moment';
+// expose page for compat
+import page from '@nuxeo/page/page.mjs';
 
 // expose Polymer and PolymerElement for 1.x and 2.x compat
 import { Polymer } from '@polymer/polymer/lib/legacy/polymer-fn.js';
@@ -76,4 +78,23 @@ Promise.all(
       `./addons/${url}`
     );
   }),
-).then(() => import(/* webpackMode: "eager" */ './elements/routing.js'));
+)
+  .then(() => customElements.whenDefined('nuxeo-app'))
+  .then(() => {
+    Nuxeo.UI.app = document.querySelector('nuxeo-app');
+    if (!Nuxeo.UI.app) {
+      console.error('could not find nuxeo-app');
+    }
+  })
+  .then(async () => {
+    if (Nuxeo.UI.config.router && Nuxeo.UI.config.router.htmlImport) {
+      window.page = page;
+      importHref(
+        Nuxeo.UI.app.resolveUrl('routing.html'),
+        () => console.warn(`default routing overridden by "routing.html"`),
+        () => import(/* webpackMode: "eager" */ './elements/routing.js'),
+      );
+      return;
+    }
+    return import(/* webpackMode: "eager" */ './elements/routing.js');
+  });
