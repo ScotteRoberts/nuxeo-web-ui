@@ -17,7 +17,6 @@ limitations under the License.
 import { html } from '@polymer/polymer/lib/utils/html-tag.js';
 import { mixinBehaviors } from '@polymer/polymer/lib/legacy/class.js';
 import { IronFormElementBehavior } from '@polymer/iron-form-element-behavior';
-import { createNestedObject } from '@nuxeo/nuxeo-elements/utils.js';
 import '@nuxeo/nuxeo-elements/nuxeo-element.js';
 import './nuxeo-ai-suggestion.js';
 
@@ -149,11 +148,34 @@ class AISuggestions extends mixinBehaviors([IronFormElementBehavior], Nuxeo.Elem
     return this._inputMatches && suggestion.value && this._inputMatches.get(this.idFunction(suggestion.value));
   }
 
+  /**
+   * Recursive method to create nested objects when they don't exist in a parent object.
+   * It does not change any other existing objects or inner objects, only the ones referred in 'path'.
+   * @param obj Parent Object where inner nested objects should be created.
+   * @param path Array containing the inner object keys.
+   * Usage Example:
+   *
+   *  - Creating document properties using xpath:
+   *
+   *    const xpath = 'my:custom/field/subfield/x'
+   *    _createNestedObjectRecursive(this.document.properties, xpath.split('/');
+   *
+   */
+  _createNestedObjectRecursive(obj, path) {
+    if (path.length === 0) {
+      return;
+    }
+    if ((!Object.prototype.hasOwnProperty.call(obj, path[0]) && !obj[path[0]]) || typeof obj[path[0]] !== 'object') {
+      obj[path[0]] = {};
+    }
+    return this._createNestedObjectRecursive(obj[path[0]], path.slice(1));
+  }
+
   _selectSuggestion(event) {
     const suggestion = this.suggestions[event.model.index];
     const propertyPath = this._parsePropertyPath();
     if (!this.get(propertyPath)) {
-      createNestedObject(this.document.properties, this.property.split('/'));
+      this._createNestedObjectRecursive(this.document.properties, this.property.split('/'));
     }
     if (Array.isArray(this.get(propertyPath))) {
       // XXX: we're doing this instead of `this.push(propertyPath, value);` because the push will produce
